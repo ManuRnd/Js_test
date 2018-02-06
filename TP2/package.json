@@ -1,0 +1,23 @@
+{
+  "name": "tp2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "create-react-app": "^1.5.1",
+    "enzyme": "^3.3.0",
+    "jsdom": "^9.0.0",
+    "react": "^16.2.0",
+    "react-addons-test-utils": "^15.6.2",
+    "sinon": "^4.2.2"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "mocha": "^5.0.0"
+  }
+}
