@@ -12,6 +12,10 @@ export class TodoList extends Component {
     }
 }
 export class TodoListContainer extends Component{
+    constructor(){
+        super();
+        this.state={todos:[]};
+    }
     render(){
         return (
             <div>

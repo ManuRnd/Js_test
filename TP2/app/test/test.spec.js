@@ -1,11 +1,10 @@
 import React from 'react';
-import { expect } from 'chai';
-import { shallow, mount } from 'enzyme';
-import { TodoListContainer } from '../src/components';
-import { TodoList } from "../src/components";
-import { InputArea } from "../src/components";
-// import Adapter from 'enzyme-adapter-react-15';
+import { expect,assert } from 'chai';
+import { shallow, mount, render, configure } from 'enzyme';
+import { TodoListContainer, InputArea, TodoList } from '../src/components';
+import Adapter from 'enzyme-adapter-react-16';
 
+configure({ adapter: new Adapter() });
 
 describe('TodoListContainer', () => {
     it('should render InputArea and TodoList', () => {
@@ -15,4 +14,9 @@ describe('TodoListContainer', () => {
             <TodoList/>
         ])).to.equal(true);
     });
+
+    it('state test',()=>{
+        const container= shallow(<TodoListContainer/>);
+        expect(container.state('todos')).to.eql([]);
+    })
 });
