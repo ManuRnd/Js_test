@@ -1,0 +1,272 @@
+<html>
+        <head>
+                <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+                <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+                <style>
+                  div {
+                    margin: 10px 0 10px 0
+                  }
+                  .code {
+                    font-family:'Courier New'
+            
+                  }
+                  div.code {
+                    background-color: #eeeeee;
+                  }
+                  .bold {
+                      font-weight: bold
+                  }
+                </style>       </head>
+        <body>
+                <div class="container">
+            <h2>Introduction</h2>
+<div>
+L'objectif de ce TP est de présenter comment mettre en place des tests dans un projet et informatique.
+Ce TP s'articule en deux partie, la première est un prise en main des framework de tests, la seconde consiste en une application JavaScript existante. 
+Nous allons étudier quelles sont ses différentes composantes et comment les tester.
+</div>
+<div>A la fin de ce TP, vous saurez :</div>
+<ul>
+   <li>Créer des fichiers de test dans une application Javascript</li>
+   <li>Écrire des tests unitaire</li>
+   <li>Exécuter les tests d'une application</li>
+</ul>
+<div>
+    Vous aurez besoin de la documentation suivante :
+    <ul>
+        <li><a href="https://mochajs.org/">Documentation Mocha</a></li>
+        <li><a href="http://chaijs.com/">Documentation Chai</a></li>
+    </ul>
+</div>
+<h2>1. Mise en place</h2>
+
+<div><span class="bold">Action 1 :</span> Récupérez le dossier TP1 qui sera la base du projet</div>
+
+<h3>1.1 Installer les outils</h3>
+
+<div>Pour ce cours, nous utiliserons comme framework de test Mocha. C'est l'un des framework de référence concernant les tests d'application Web Node.js et coopère bien avec la majorité des autres outils de test.</div>
+<div><span class="bold">Action 1 :</span> Pour installer Mocha, le plus simple est de passer par npm.</div>
+<div class="code">npm install -g mocha</div>
+<div><span class="bold">Question 1 :</span> À quoi sert l'option -g de l'installation ?</div>
+
+<div>Une fois mocha installé, vous devriez pouvoir l'utiliser en ligne de commande :</div>
+
+<div class="code">
+    mocha fichierTest.js
+</div>
+
+<div><span class="bold">Action 2 :</span> Pour utiliser mocha dans votre projet, vous aurez besoin de l'installer dans les dépendances du package.json</div>
+
+<div class="code">npm install --save-dev mocha</div>
+
+<div><span class="bold">Question 2 :</span> Pourquoi utiliser --save-dev ?</div>
+
+<div>Le second outil pour effectuer est tests est Chai. Chait possède un nombre important de fonction utilitaires pour valider les tests et vérifier que le code fonctionne.</div>
+
+<div><span class="bold">Action 3 :</span> Installer Chai de la même manière que mocha.</div>
+<div><span class="bold">Question 3 :</span> Selon vous, faut-il également utiliser --save-dev pour chai ? </div>
+
+<h2>2. Prise en main du framework</h3>
+
+<div>Il est de bonne pratique de créer les tests dans un dossier à part, nommé "test"</div>
+
+<div><span class="bold">Action 1 :</span> Créez un fichier "arrayTest.js" dans le dossier "test"</div>
+
+<h4>Définition d'un test</h4>
+
+<div>Chaque test est défini de la même façon. Les tests sont regroupés sous forme de bloc <span class="code">describe</span> :</div>
+
+<div class="code">
+describe('Array', function() {<br/>
+    &emsp;// Further code for tests goes here<br/>
+}); 
+</div>
+
+<div><span class="code">describe</span> prend 2 paramètres.
+    <ol>
+        <li>Le nom du groupe : C'est généralement le nom de la classe ou du fichier javascript que le test</li>
+        <li>Une fonction : C'est dans cette fonction que seront exécutés les tests du groupe</li>
+    </ol>
+</div>
+<div>Ensuite, chaque test unitaire est situé dans une fonction <span class="code">it</span> :</div>
+
+<div class="code">
+describe('Array', function() {<br/>
+    &emsp;it('should be empty', function() {<br/>
+    &emsp;&emsp;  // Test implementation goes here<br/>
+    &emsp; });<br/>
+    <br/>
+    &emsp;&emsp;    // We can have more its here<br/>
+  });
+</div>
+
+<div>Une fonction <span class="code">it</span> se décompose comme suit :</div>
+
+<ol>
+    <li>La description : la bonne pratique qu'il soit clair et concit sur ce que fait le test</li>
+    <li>La fonction du test : C'est là que le code effectuant le test se trouve</li>
+</ol>
+
+<div><span class="bold">Question 1 :</span> Sans voir le code du test, deviner ce que devrait faire le test "it should be empty" du groupe "Array"</div>
+
+<div><span class="bold">Action 1 :</span> Écrire un test basique qui : </div>
+<div>
+    <ul>
+        <li>Déclare un tableau vide</li>
+        <li>Vérifie que ce tableau contient 0 éléments</li>
+    </ul>
+</div>
+
+<div>Note : Chai possède toute la documentation pour effectuer des vérifications sur des variables. Chai propose 3 syntaxes différentes pour faire ces tests. Pour ce 1er test, testez chacune des syntaxes. Pour les tests suivant, vous pourrez utiliser celle que vous préférez</div>
+
+<div>Pour lancer le tester, utilisez la commande mocha présenté précedemment dans le TP</div>
+
+<div><span class="bold">Action 2 :</span> Changez le test et testez que le tableau vide contient 1 élément à la place</div>
+
+<h3>3. Créer des tests</h3>
+
+<div>Vous avez pour l'instant créé qu'un test basique, nous allons maintenant procéder à un cas réel</div>
+
+<div><span class="bold">Action 1 :</span> Créer un fichier "className.js" dans un dossier "src"</div>
+
+<div class="code">
+        function addClass(element, newClass) {<br/>
+            &emsp;            // if class does not existante<br/>
+            &emsp;      if(element.className.indexOf(newClass) === -1) {<br/>
+            &emsp;           // append class to element<br/>
+            &emsp;&emsp;       element.className += newClass;<br/>
+            &emsp;     }<br/>
+          }          
+</div>
+
+<div><span class="bold">Question 1 :</span> Expliquer ce que fait cette fonction.</div>
+
+<div><span class="bold">Action 2 :</span> Quels sont les 2 tests de base que nous pouvons faire sur cette fonction ? les écrire dans un nouveau fichier test/className.spec.js. Lancer ces tests pour vérifier qu'ils passent avec la commande <span class="code">mocha</span>.</div> 
+<div>Indice : Vous devrez importer la fonction addClass dans le fichier de test.</div>
+
+<div><span class="bold">Action 3 :</span> Effectuer un 3ème test, qui appelle 2 fois la fonction, avec comme paramètre "className1" et "className2", et vérifie que le résultat de la variable "className" est bien "className1 className2"</div>
+
+<div><span class="bold">Question 2 :</span> Le test échoue. Pourquoi ? Corriger le bug dans la fonction testée</div>
+
+<h3>4. Test d'appels REST</h3>
+
+<div>Actuellement vous êtes en mesure de faire des tests unitaires sur des fonctions JavaScript simples. Il n'y a pas de serveur impliqué dans les tests.</div>
+<div>Pour tester les appels REST d'une application, il faut qu'on ait un serveur fonctionnel pendant l'exécution des tests. Or, les tests unitaires doient pouvoir être exécutés de façon indépendante de son environnement. On ne veut pas que les tests réussissent si vous avez lancé un serveur à côté et échouent sinon !</div>
+
+<div>Pour cette partie, nous utiliserons le projet express-crud existant en marge de ce TP</div>
+
+<div><span class="bold">Action 1 :</span> Lancer ce projet pour vérifier qu'il fonctionne</div>
+
+<div><span class="bold">Question 1 : </span> Expliquer brièvement ce que fait ce projet</div>
+
+<div>Chai propose un plugin, chai-http permettant de faire ses répondre ces appels serveurs depuis les fichiers de test.</div>
+
+<div>Chai HTTP s'importe dans le projet comme n'importe quel autre module</div>
+
+<div><span class="bold">Action 2 : </span> Installer le module chai-http dans le projet</div>
+
+<div class="code">var chaiHttp = require('chai-http');</div>
+
+<div>Pour indiquer à Chai qu'on utilise ce module, il est nécessaire de lui indiquer dans le fichier :</div>
+
+<div class="code">chai.use(chaiHttp);</div>
+
+<div>Dans ce projet, il y a un dossier tests qui contient la liste des tests à écrire</div>
+
+<div class="code">
+describe('Films', function() {<br/>
+    &emsp;it('should list ALL films on /films GET');<br/>
+    &emsp;it('should add a SINGLE film on /films POST');<br/>
+    &emsp;it('should list a SINGLE film on /film/&lt;id&gt; GET');<br/>
+    &emsp;it('should update a SINGLE film on /film/&lt;id&gt; PUT');<br/>
+    &emsp;it('should delete a SINGLE film on /film/&lt;id&gt; DELETE');<br/>
+  });
+</div>
+
+<div>L'objectif de cette partie du TP est de réussir à écrire cette liste de tests. Vous devrez vous baser sur la documentation de chai-http pour déterminer les requêtes et tests à effectuer.</div>
+
+<h4>Test 1 : it should list ALL films on /films GET</h4>
+
+<div><span class="bold">Action :</span> Écrire ce test qui :</div>
+<ul>
+    <li>Interroge l'url /films</li>
+    <li>Vérifie que le statut de la réponse soit au statut 200</li>
+    <li>Vérifie que la réponse est au format json</li>
+    <li>Vérfie que le contenu de la réponse est un tableau</li>
+    <li>Vérifie que le tableau est vide</li>
+</ul>
+
+<h4>Test 2 : it should add a SINGLE film on /films POST</h4>
+
+<div><span class="bold">Action :</span> Écrire ce test qui :</div>
+<ul>
+    <li>Interroge l'url /films avec comme paramètre de POST {'title': 'Star Wars', 'year': 1977}</li>
+    <li>Vérifie que le statut de la réponse soit au statut 200</li>
+    <li>Vérifie que la réponse est au format json</li>
+    <li>Vérfie que le contenu de la réponse est un objet</li>
+    <li>Vérifie que l'objet possède les propriétés title et year</li>
+    <li>Vérifie que les propriétés title et year correspondent à ceux données en entrée</li>
+</ul>
+
+<div>Si vous relancez les tests plusieurs fois, vous risquez de rencontrer un problème, le test 1 ne devrait plus fonctionner.</div>
+
+<div><span class="bold">Question :</span> Pour quelle raison ce 1er test ne passe plus ?</div>
+
+<div>Les tests unitaire ce doivent d'être toujours indépendants les uns des autres pour éviter ce type de problèmes</div>
+
+<div>Il est possible définir des actions à effectuer avant et après les tests :</div>
+<ul>
+    <li>before : s'exécute avant l'exécution des tests</li>
+    <li>after : s'exécute après l'exécution des tests</li>
+    <li>beforeEach : s'exécute avant l'exécution de chaque test</li>
+    <li>afterEach : s'exécute après l'exécution de chaque test</li>
+</ul>
+
+<div>Ces actions sont des fonctions à définir à l'intérieur des blocs <span class="bold">describe</span> et s'appliquera aux tests de ce bloc</div>
+
+<div><span class="bold">Question :</span> dans la situation actuelle, quelle est la bonne méthode a utiliser et que doit-elle faire ?</div>
+
+<h4>Test 3 : it should list a SINGLE film on /film/&lt;id&gt; GET</h4>
+
+<div>Pour ce test, vous aurez besoin de contenu dans la base de données, sinon il vous sera impossible de récupérer un élément</div>
+
+<div><span class="bold">Action :</span> Adapter l'initialisation de la base durant les tests pour qu'il y ait toujours 1 film en base de données. Adapter le 1er test en conséquence.</div>
+
+<div><span class="bold">Action :</span> Écrire ce test qui doit :</div>
+<ul>
+    <li>Interroge l'url /film/&lt;title&gt;</li>
+    <li>Vérifie que le statut de la réponse soit au statut 200</li>
+    <li>Vérifie que la réponse est au format json</li>
+    <li>Vérfie que le contenu de la réponse est un objet</li>
+    <li>Vérifie que l'objet possède les propriétés title et year</li>
+    <li>Vérifie que les propriétés title et year correspondent à celles attendues</li>
+</ul>
+
+<h4>Test 4 : it should update a SINGLE film on /film/&lt;id&gt; PUT</h4>
+
+<div><span class="bold">Action :</span> Écrire ce test qui :</div>
+<ul>
+    <li>Interroge l'url /film/&lt;title&gt; avec un PUT et comme contenu une mise à jour du film en question</li>
+    <li>Vérifie que le statut de la réponse soit au statut 200</li>
+    <li>Vérifie que la réponse est au format json</li>
+    <li>Vérifie que la réponse a une propriété UPDATED</li>
+    <li>Vérfie que le contenu de UPDATED est un objet</li>
+    <li>Vérifie que l'objet possède les propriétés title et year</li>
+    <li>Vérifie que les propriétés title et year correspondent à celles attendues</li>
+</ul>
+
+<h4>Test 5 : it should delete a SINGLE film on /film/&lt;id&gt; DELETE</h4>
+
+<div><span class="bold">Action :</span> Écrire ce test qui doit :</div>
+<ul>
+    <li>Interroger l'url /film/&lt;title&gt; avec un DELETE</li>
+    <li>Vérifie que le statut de la réponse soit au statut 200</li>
+    <li>Vérifie que la réponse est au format json</li>
+    <li>Vérifie que la réponse a une propriété REMOVED</li>
+    <li>Vérfie que REMOVED est un objet</li>
+    <li>Vérifie que l'objet possède les propriétés title et year</li>
+    <li>Vérifie que les propriétés title et year correspondent à celles attendues</li>
+</ul>
+</div>
+</body>
+</html>

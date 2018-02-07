@@ -1,0 +1,609 @@
+<html>
+<head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <style>
+      div {
+        margin: 10px 0 10px 0
+      }
+      .code {
+        font-family:'Courier New'
+
+      }
+      div.code {
+        background-color: #eeeeee;
+      }
+      .bold {
+        font-weight: bold
+      }
+    </style>
+  </head>
+<body>
+    <div class="container">
+    <h2>
+        Introduction
+    </h2>
+    <div>
+        <div>Vous avez écrit quelques tests unitaires de vos fonctions serveur dans le TP précédent</div>
+        <div>Cependant, vous n'avez pas encore testé la partie React d'une application</div>
+        <div>Le fonctionnement de React, avec des classes qui génèrent des portions d'HTML et des paramètres passés en propriété dans du HTML demande des modules spécifiques pour être testés</div>
+        <div>Ce TP sera également, l'occasion de pratiquer le développement dirigé par des tests abordé en cours précédemment</div>
+    </div>
+    <div>
+        <div>À la fin de ce TP vous saurez :</div>
+        <ul>
+          <li>Écrire des tests pour des composants React</li>
+          <li>Développer une application simple en suivant la méthode du TDD</li>
+        </ul>
+    </div>
+    <div>
+        En plus de la documentation du TP précédent, vous aurez également besoin de la documentation :
+        <ul>
+        <li><a href="https://github.com/tmpvar/jsdom">JSDom</a></li>
+        <li><a href="https://github.com/airbnb/enzyme">Enzyme</a></li>
+        <li><a href="http://sinonjs.org/">Sinon</a></li>
+        <li><a href="https://reactjs.org/docs/test-utils.html">Utilitaires de test React</a>
+      </ul>
+    </div>
+    <div>
+        <div>Tester des composants React demande un certain nombre d'outils supplémentaires, cela pour plusieurs raisons :</div>
+        <ul>
+            <li>Les composants react s'intègrent directement dans le DOM, il est nécessaire d'avoir un interpréteur de DOM qui remplacera le navigateur. C'est le rôle de JSDOM</li>
+            <li>Les composants react sont très souvent interconnectés et dépendent les uns des autres. Pour faire des tests, on a besoin de vérifier qu'ils font tous ce qu'il devraient de façon isolée. C'est le rôle de la librairie Sinon de fournir des "espions" qui permettront de tester que ces interactions sont correctes</li>
+            <li>Une page est très souvent composée de plusieurs composants et sous-composants React. Enzyme est là pour isoler le rendu de chaque composant et éviter d'être parasité par les composants fils</li>
+        </ul>
+    </div>
+
+    <h2>1. Mise en place</h2>
+
+    <div><span class="bold">Action 1 :</span> Créez un dossier TP2 et initialiser le projet avec npm et les options par défaut</div>
+
+    <div><span class="bold">Action 2 :</span> Installez comme dans le TP précédent les modules et mocha et chai</div>
+
+    <div><span class="bold">Action 3 :</span> Installez tous les modules nécessaires pour un projet React : babel-core, babel-preset-env, babel-preset-react, react, react-dom</div>
+
+    <p><span class="bold">Action 4 :</span> Installez les nouveaux modules nécessaires : </p>
+
+    <div class="code">
+        npm install sinon enzyme jsdom
+    </div>
+    <div><span class="bold">Action 5 :</span> Installez également les fonctions utilitaires fournies par react</div>
+
+    <div class="code">
+        npm install react-addons-test-utils
+    </div>
+
+    <div>JSDOM est là pour simuler le rendu du navigateur. Il fonctionne avec un fichier qui va le configurer</div>
+
+    <div><span class="bold">Action 6 :</span> Créez un fichier setup.js à la racine du projet</div>
+
+    <div class="code">
+        require('babel-register')();<br/>
+        <br/>
+        var jsdom = require('jsdom').jsdom;<br/>
+        <br/>
+        var exposedProperties = ['window', 'navigator', 'document'];<br/>
+        <br/>
+        global.document = jsdom('');<br/>
+        global.window = document.defaultView;<br/>
+        Object.keys(document.defaultView).forEach((property) => {<br/>
+          &emsp;if (typeof global[property] === 'undefined') {<br/>
+            &emsp; &emsp;     exposedProperties.push(property);<br/>
+            &emsp;  &emsp;     global[property] = document.defaultView[property];<br/>
+            &emsp;  }<br/>
+        });<br/>
+        <br/>
+        global.navigator = {<br/>
+        userAgent: 'node.js'<br/>
+        };<br/>
+    </div>
+
+    <div>Ce code est utilisable pour n'importe quel projet utilisant JSDOM</div>
+
+    <div>
+        <span class="bold">Action 7 :</span> Créez un fichier index.js basique à la racine et lancer l'application pour vérifier que ça marche
+    </div>
+    <div class="code">
+      import React from 'react';<br/>
+      import ReactDOM from 'react-dom';<br/>
+      <br/>
+      let Hello = () => <span>Hi</span><br/>
+      <br/>
+      ReactDOM.render(&lt;Hello/&gt;, document.querySelector('#root'));
+    </div>
+
+    <div>Vous devriez avoir toute l'installation nécessaire pour démarrer le TP à présent</div>
+
+    <h2>
+      2. Récapitulatif des outils installés
+    </h2>
+
+    <div>
+      <ul>
+        <li>
+          <span class="bold">Mocha</span>, le framework de tests, déjà utilisé dans le TP précédent, c'est l'outil de haut-niveau qui organisera et déroulera les tests les uns après les autres.
+          C'est lui qui trouvera les fichiers et déroulera l'ensemble des tests qu'ils contiennent : les fonctions describe et it.
+        </li>    
+        <li>
+            <span class="bold">Chai</span>, la bibliothèque d'assertions, déjà utilisé dans le TP précédent, qui contient l'ensemble des fonctions de base pour vérifier le bon fonctionnement du code            
+        </li>   
+        <li>
+            <span class="bold">Sinon</span>, la bibliothèque en charge de créer et valider des espions. Les espions servent à simuler certaines parties du code. C'est particulièrement utile pour React pour simuler vérifier les interactions entre les composants.
+        </li> 
+        <li>
+            <span class="bold">Enzyme</span> la bibliothèque en charge de faire l'affichage et de tester spécifiquement des composants React 
+        </li>     
+        <li>
+            <span class="bold">react-addons-test-utils</span>, les fonctions utilitaires de base fournis par React pour les tests
+        </li>
+        <li>
+            <span class="bold">JSDOM</span> qui simule le navigateur utilisé pour les tests
+        </li>
+      </ul>
+    </div>
+      <div>
+        Voici comment l'ensemble fonctionne :
+      <div>
+          <div>Mocha organise les tests en blocs et se charge de les lancer. Chai est utilisé dans les tests Mocha pour vérifier si oui ou non le test est un succès.</div>
+          <div>Pour que Chai ait toutes les informations pour valider que le test sur un composant React est un succès, il est nécessaire de faire appel à Sinon, Enzyme, React-addons-test-utils et JSDOM</div>
+      </div>
+
+      <h2>3. Pourquoi tester composant React ?</h2>
+
+      <div>Les composants React peuvent être de complexité variable. Certains sont parfois complexes, d'autres beaucoup plus simples, n'étant constitués que de sous-composants. Quel est l'intérêt de tester ce genre de composant ? Certains tests peuvent parfois sembler banals, mais il est bon de s'astreindre malgré tout à toujours tester l'ensemble de ses composants. En cas de refactoring, on peut ainsi s'assurer que l'ensemble du code fonction toujours sans avoir à y réfléchir à 2 fois. Un erreur d'inattention est vite arrivée.</div>
+
+      <h2>4. Comment tester un composant React ?</h2>
+
+<div>La technique de base pour tester un composant React est d'utiliser le rendu "superficiel" (ou "shallow") C'est l'une des méthodes d'affichage proposée par Enzyme. En rendu superficiel, un composant ne fait qu'afficher les balises à un niveau de profondeur : ses sous-composants ne sont pas interprétés.</div>
+
+<div>
+Voici un composant "Person" affichant le nom et le prénom d'une personne. Il est composé de 2 sous-composants Name et Age
+</div>
+
+<div class="code">
+let Person = ({person}) => (<br/>
+&emsp; &lt;span&gt; &lt;Name person={person}/&gt; <br/>
+&emsp; &lt;Age person={person}/&gt;<br/>
+ &emsp;  &lt;/span&gt;<br/>
+)
+</div>
+
+En rendu superficiel, le résultat est :
+
+<div class="code">
+    &lt;span&gt; <br/> &emsp;&lt;Name person={person}/&gt; <br/>
+    &emsp;&lt;Age person={person}/&gt;<br/>
+    &lt;/span&gt;<br/>
+</div>
+
+<div>Vous constatez que Name et Age ne sont pas interprétés.</div>
+<div><span class="bold">Question 1 :</span> Quel est l'intérêt du rendu superficiel ?</div>
+
+<div>
+  Enzyme propose également un autres type de rendu, "complet" (ou "full") qui lui interprète l'ensemble des sous-composants.
+  Supposons que pour tester le composant Person on utilise rendu "full".
+  Plus tard dans le projet, le sous-composant Name change, et, au lieu d'afficher le nom seulement, affiche également le prénom.
+</div>
+
+<div><span class="bold">Question 2 :</span> Quel serait l'impact sur le composant Person ?</div>
+
+<div>Dans certains des derniers tests de ce TP, il sera malgré tout de même nécessaire de tester le rendu complet de la page</div>
+
+<h2>
+5. Quoi tester ?
+</h2>
+<ol>
+  <li>
+    <div>Ça s'affiche !</div>
+    <div>Le test de base, c'est que la méthode render ne renvoie pas d'erreur.
+      Cela permet de vérifier qu'il n'y a pas d'erreur de syntaxe, qu'on utilise pas de variables non définies...
+      Vérifier que la fonction render ne renvoie pas null suffit pour ce test minimal.
+    </div>
+  </li>
+    
+
+  <li>
+      <div>Ça s'affiche correctement"</div>
+      <div>
+        En donnant un set de paramètres pour initialiser le composant, il faut tester que le rendu final correspond à ce qu'il devrait.
+      </div>
+  </li>
+
+  <li>
+      <div>Tester également les états (states) sont corrects pour ce composant.</div>
+      <div>Par exemple vérifier qu'il qu'un bouton est actif/inactif selon la valeur d'un booléen.</div>
+  </li>
+
+  <li>
+    <div>Tester les événements.</div>
+    <div>Certains composants peuvent déclencher des événements.Par exemple un bouton peut déclencher un événement onClick. Ces événements doivent également être testés </div>
+  </li>
+
+  <li>
+      <div>Tester les cas particuliers.</div>
+      <div>
+          De nombreux bugs sont liés à des cas particuliers. (tableau vide, valeur null...)
+          La dernière chose à tester est d'utiliser ces valeurs spécifiques comme paramètre d'entrée, afin d'éviter ce type d'effet de bord.
+      </div>
+  </li>
+</ol>
+<h2>6. Qu'est ce qu'on teste ?</h2>
+<div>Nous allons construire une application de todo list.<br/>
+Elle sera constituée d'un formulaire d'ajout, et d'une liste montrant le contenu de la to-do liste
+</div>
+<div>
+Voici un schéma montrant la structure de la page :
+</div>
+
+<div> Voici le détail des composants de cette application :</div>
+
+<ul>
+  <li>TodoListContainer : le composant principal qui englobe les autres</li>
+  <li>InputArea : un composant regroupant tout ce qui concerne l'ajout de nouveaux éléments dans la liste</li>
+  <li>Champ input : un champ input HTML de base qui va contenir le prochain élément todo à ajouter</li>
+  <li>Bouton ajouter : un bouton HTML de base qui validera l'ajout</li>
+  <li>TodoList : le composant React qui gère l'affiche de la list des todos</li>
+  <li>item : un élément de la liste des todos, qui sera une simple balise HTML &lt;li&gt;</li>
+</ul>
+
+<h2>7. Démarrer la méthode de TDD</h2>
+
+<div>Dans la méthode TDD, les tests précédent le développement. Nous définissons d'abord quels sont les choses à valider pour que le développement soit valide, puis seulement on développe les fonctionnalités associées.</div>
+
+<h3>Initialisation du projet</h3>
+
+<div>Commencez par utiliser le composant principal TodoListContainer dans index.js</div>
+
+<div class="code">
+import React, { Component } from 'react';<br/>
+import ReactDOM from 'react-dom';<br/>
+import {TodoListContainer} from './components';<br/>
+<br/>
+ReactDOM.render(<br/>
+&emsp; &lt;TodoListContainer/&gt;,<br/>
+&emsp;  document.querySelector('#root')<br/>);
+</div>
+
+<div>
+Nous allons les composants dans un fichier components.js, ceci en vue de simplifier l'exercice.
+Dans un contexte classique, chaque composant devrait avoir son propre fichier et fichier de test.
+</div>
+
+<div class="code">
+    export class InputArea extends Component {<br/>
+      &emsp;  &emsp;  render() {<br/>
+        &emsp;   &emsp;&emsp;   return &lt;input/&gt;<br/>
+        &emsp; }<br/>
+    }<br/>
+    <br/>
+    export class TodoList extends Component {<br/>
+      &emsp;  render() {<br/>
+        &emsp;&emsp;     return &lt;ul/&gt;<br/>
+        &emsp;    }<br/>
+    }
+</div>
+
+<div>Initialisez le fichier .babelrc à la racine du projet</div>
+
+<div class="code">
+    {
+      "presets": ["env", "react"]
+    }
+</div>
+    
+<div>Vérifiez que votre application démarre</div>
+
+<div>Créez un test basique qui vérifie uniquement que true = true</div>
+
+<div>Pour lancer les tests :</div>
+
+<div class="code">
+mocha --require setup.js *.spec.js
+</div>
+
+<div><span class="bold">Question :</span> Expliquer les différents paramètres de la commande mocha à l'aide de la documentation</div>
+
+<div>
+  Actuellement, aucun test pertinent n'est fait dans components.spec.js
+</div>
+
+<h3>Test 1 : Structure de todoListContainer</h3>
+
+<div>Commencez par écrire votre premier test</div>
+<div class="code">import React from 'react';<br/>
+import { expect } from 'chai';<br/>
+import { shallow, mount } from 'enzyme';<br/>
+import { TodoListContainer } from './components';<br/>
+<br/>
+describe('TodoListContainer', () => {<br/>
+    &emsp; it('should render InputArea and TodoList', () => {<br/>
+    &emsp; &emsp; const wrapper = shallow(&lt;TodoListContainer/&gt;);<br/>
+    &emsp; &emsp; expect(wrapper.containsAllMatchingElements([<br/>
+    &emsp; &emsp; &emsp; &lt;InputArea/&gt;,<br/>
+    &emsp; &emsp; &emsp; &lt;TodoList/&gt;<br/>
+    &emsp; &emsp; ])).to.equal(true);<br/>
+    &emsp; });<br/>
+});<br/>
+</div>
+
+<div>
+  <div><span class="bold">Question 1 :</span> Quel est le résultat de ce test ? Pour quelle raison ?</div>
+  <div><span class="bold">Question 2 :</span> Expliquer le rôle de shallow dans ce test</div>
+  <div><span class="bold">Question 3 : </span> À quoi sert containsAllMatchingElements ?</div>
+  <div><span class="bold">Question 4 : </span> Quel est l'attendu du test pour qu'il fonctionne ?</div>
+</div>
+
+<div><span class="bold">Action :</span> Faire les actions minimales nécessaires dans components.js pour faire passer le test.<br/>
+Note : Importer également les nouveaux composants créés dans components.spec.js
+</div>
+
+<h3>Test 2 : Tester les états</h3>
+
+<div>Notre application va gérer une liste d'élément todo. D'un point de vue architecture, il serait logique, il faudrait que le container maintienne à jour le contenu de la todo-list. La variable utilisée sera dans le state du composant et sera nommée <span class="bold">todos</span>
+Commençez par travailler sur cette fonctionnalité avant de tester les sous-composants. 
+</div>
+
+<div><span class="bold">Action :</span> Ecrire un test qui :</div>
+<ul>
+  <li>Génère le composant TodoListContainer</li>
+  <li>Vérifie que le composant TodoListContainer possède un state 'todos'</li>
+  <li>Vérifie que le state 'todos' est un tableau vide</li>
+</ul>
+</div>
+
+<div>Comme <span class="code">todos</span> n'a jamais été déclarée dans le composant todoListContainer, le test va échouer.</div>
+
+<div><span class="bold">Action :</span> Créer la variable todos au state de TodoListContainer et l'initialiser</div>
+<div><span class="bold">Question :</span> le test, interchangez la fonction eql et equal et observez la différence de comportement. Quelle est la différence entre ces deux fonctions ?</span>
+
+<h3>Test 3 : Ajouter un élément</h3>
+
+<div>Vous avez maintenant un composant avec un liste initialisée à vide.
+Il est à présent nécessaire de tester l'ajout d'éléments à cette liste.
+Pour rappel, c'est le composant TodoListContainer qui va maintenir l'état de la liste.
+Il va donc avoir une fonction addItem qui sera fourni au composant InputArea plus tard.
+</div>
+
+<div><span class="bold">Action : </span> Ajoutez dans components.spec.js, un test de la fonction addItem to TodoListContainer qui n'a pas encore été créée. Ce test doit</div>
+<ul>
+  <li>Appelez addItem avec commme paramètre "Réussir mon diplôme"</li>
+  <li>Vérifier que todos est modifié en accord avec cet appel</li>
+</ul>
+
+<div>Ce test doit normalement échouer sur :</div>
+<div class="code">wrapper.addItem is not a function</div>
+
+<div>Ajoutez la fonction addItem dans TodoListContainer</div>
+
+<div class="code">
+    addItem(name) {
+    // do nothing for now
+  }
+</div>
+
+<div>Vous devriez toujours avoir la même erreur</div>
+<div><span class="bold">Question :</span> D'après vos connaissance React. Que manque-t-il pour que la fonction soit utilisable ? Ajouter ce qu'il manque à TodoListContainer</div>
+
+<h3>Test 4: Tester la descente d'une fonction à un sous-composant</h3>
+
+<div>Le conteneur TodoListContainer fonctionne maintenant comme il devrait.
+Nous allons maintenant passer la fonction addItem en paramètre à InputArea, qui l'utilisera pour alimenter le tableau.
+</div>
+
+<div><span class="bold">Action 1 :</span> Créer un test qui
+  <ul>
+    <li>Génère TodoListContainer avec Enzyme</li>
+    <li>Vérifie que le sous-composant InputArea possède une propriété onSubmit</li>
+    <li>Vérifie que la propriété onSubmit de InputArea est bien égale à addItem</li>
+  </ul>
+</div>
+
+<div><span class="bold">Action 2 :</span>Une fois ce test écrit, modifier la fonction render de todoListContainer pour que le test passe.</div>
+
+<div><span class="bold">Action 3 :</span> Il est de bonne pratique de toujours renseigner les propriétés au PropTypes du composant. Ajouter onSubmit au PropTypes du composant InputArea en tant que propriété requise.</div>
+
+<h3>Test 5: Vérifier le binding</h3>
+
+<div>
+    <span class="bold">Action 1 :</span> Afin de confirmer que addItem fonctionne bien, on peut ajouter un tester supplémentaire :
+</div>
+<ul>
+  <li>Générer avec Enzyme le composant TodoListContainer</li>
+  <li>Récupérer la propriété onSubmit du sous-composant inputArea</li>
+  <li>Appeler cette fonction avec comme paramètre "Réussir mon diplôme"</li>
+  <li>Vérifier que la variable todos est modifiée en accord avec cela</li>
+</ul>
+
+<div>
+    Ce test devrait échouer avec comme erreur :
+</div>
+
+<div class="code">
+  Cannot read property 'setState' of undefined
+</div>
+
+<div><span class="bold">Question :</span> D'après vos connaissances sur React, d'où vient cette erreur ?
+
+
+<div><span class="bold">Action 2 :</span> TodoListContainer pour que le test fonctionne. </div>
+
+<h3>Test 6: Structure de InputArea</h3>
+
+<div>Nous avons terminé pour todoListContainer. Nous allons passer à InputArea.</div>
+
+<div><span class="bold">Action 1 :</span> Construisons un test dans components.spec.js. Il doit vérifier que :</div>
+
+<ul>
+  <li>
+      &lt;InputArea/&gt; contient un champ &lt;input/&gt; et un champ &lt;button&gt;Add&lt;/button&gt;
+  </li>
+</ul>
+
+<div><i>Note : comme nous testons un composant différent, créer le test dans un bloc descibe différent.</i></div>
+
+<div>Une fois le test écrit, il doit échouer sur cette erreur :</div>
+
+<div class="code">AssertionError: expected false to equal true</div>
+
+<div>
+  <span class="bold">Action 2 :</span> la classe InputArea pour que le test fonctionne.</div>
+</div>
+
+<h3>
+Test 7: Prise en compte du formulaire
+</h3>
+
+<div>
+<div>Nous allons maintenant tester que le champ du formulaire se comporte normalement</div>
+<div><span class="bold">Action 1 :</span> Faire un test qui :
+  <ul>
+    <li>Récupère le champ input de &lt;InputArea/&gt;</li>
+    <li>Récupère la balise input de &lt;InputArea/&gt;</li>
+    <li>Simule un changement (voir fonction simulate d'Enzyme) dans le contenu de la balise input.</li>
+    <li>Vérifie que le state "text" de InputArea est égal à la valeur indiquée dans la simulation ci-dessus</li>
+    <li>Vérifie que la propriété "value" de la balise input vaut également cette valeur.</li>
+  </ul>
+</div>
+
+<div>Le test doit échouer avec cette erreur :</div>
+
+<div class="code">TypeError: Cannot read property 'text' of null</div>
+
+<div>Cette erreur doit vous sembler familière : Il s'agit d'une erreur du même type que celle du test 2.</div>
+
+<div><span class="bold">Action 2 :</span> Complétez la classe InputArea pour ne plus avoir cette erreur.</div>
+
+<div><span class="bold">Action 3 :</span> Ajoutez également une fonction setText et l'associer à la classe. Nous en aurons besoin prochainement. Cette fonction doit mettre ajouter l'état de la classe en associant la valeur passée en paramètre au champ "text" de l'état</div>
+
+<div>Vous devriez mainteant avoir l'erreur suivante :</div>
+
+<div class="code">AssertionError: expected '' to equal 'XXX'</div>
+
+<div><span class="bold">Action 2 :</span> Complétez la classe InputArea pour que cette 1ère vérification passe.</div>
+
+<div>Par la suite, malgré vos changements, vous devriez avoir la même erreur, mais sur la 2de vérification</div>
+
+<div>Au début de ce TP, il était indiqué que le rendu Enzyme "superficiel" était suffisant pour la majorité des cas.</div>
+<div><span class="bold">Question :</span> Pour ce type de problème, pourquoi ce ne sera pas suffisant ?</div>
+
+<div><span class="bold">Action 4 :</span> Rechercher dans la documentation Enzyme ce que fait mount de plus que shallow, et l'utiliser à sa place</div>
+
+<div>Tous les tests devraient maintenant fonctionner</div>
+
+<h3>Test 8: Activer le bouton ajouter</h3>
+
+<div>Le bouton Ajouter ne fait actuellement rien. Quand le bouton est cliqué, on s'attend à ce que la fonction onSubmit soit appelée avec comme paramètre le contenu du champ input.</div>
+
+<div>Ce test utilisera le module Sinon pour espionner le comportement déclenché au clic du bouton.</div>
+
+<div><span class="bold"> Action 1 :</span> Avant de commencer l'écriture du test. Importer spy depuis le module sinon dans components.spec.js</div>
+
+<div class="code">
+import { spy } from 'sinon';
+</div>
+
+<div>
+Un espion se déclare comme suit :
+</div>
+
+<div class="code">
+const addItemSpy = spy()
+</div>
+
+<div>
+Cette variable est la fonction qui remplacera la propriété addItem dans le test.
+L'avantage d'un espion possède un certain nombre de propriétés permettant de savoir si la fonction a été appelée, combien de fois, et avec quels paramètres.</div>
+<div>
+Quelques exemples non exhaustifs de propriétés des espions :
+<ul>
+<li>called : vrai si la fonction a été appelée au moins une fois</li>
+<li>calledOnce() : vrai si la fonction a été appelée exactement une fois</li>
+<li>calledWith(...) : vrai si les paramètres de callWith correspondent à ceux passés à la fonction pendant le test</li>
+</ul>
+</div>
+<div>
+  L'ensemble des possibilités des espions sont renseignés dans la documentation de sinon.
+</div>
+
+<div><span class="bold">Action 2 :</span> Utilisez maintenant un espion dans un nouveau test pour vérifier que :</div>
+<ul>
+    <li>la fonction onSubmit est appelée exactement une fois</li>
+    <li>la fonction onSubmit est appelée avec comme paramètre le contenu de l'état "text" préalablement définit dans le test.</li>
+</ul>
+
+<div>
+Bien entendu, comme le bouton n'est pas encore relié à onSubmit, le test va échouer :
+</div>
+
+<div class="code">
+  AssertionError: expected false to equal true
+</div>
+
+<div><span class="bold">Action 3 :</span> Créez la fonction handleClick dans &lt;InputArea/&gt; qui fera passer le test</div>
+
+<h3>Tests 9-11: Afficher la liste</h3>
+
+<div>La todoList est le composant suivant à être développé.</div>
+<div>Le composant todoList aura de la part de todoListContainer le tableau todos passés via la propriété <span class="bold">items</span> : <span class="code">&lt;TodoList items={this.state.todos}/&gt;</span>
+
+<div>Comme todoList est un nouveau composant, il aura son propre bloc describe.</div>
+
+<div>Les 3 tests à effectuer sont assez proches, on peut les écrire dans un même temps.</div>
+<div><span class="bold">Action 1 :</span>Écrire un test qui vérifie le cas initial :</div>
+ <ul>
+   <li>En donnant en paramètre une liste d'items vide</li>
+   <li>Vérifier que le nombre de balises &lt;li&gt; dans le composant est 0</li>
+ </ul>
+
+ <div><span class="bold">Action 2 :</span>Écrire un test qui vérifie un cas particulier :</div>
+ <ul>
+    <li>En donnant en paramètre une liste d'items valant undefined</li>
+    <li>Vérifier que le nombre de balises &lt;li&gt; dans le composant est 0</li>
+ </ul>
+ <div><span class="bold">Action 3 :</span> Écrire un test qui vérifie le cas classique :</div>
+
+  <ul>
+      <li>En donnant en paramètre une liste d'items contenant 3 éléments</li>
+      <li>Vérifiez que le nombre de balises &lt;li&gt; dans le composant est 3</li>
+  </ul>
+ 
+<div>Les 2 premiers tests doivent passer. En effet dans le composant todoList actuellement, il n'est pas possible d'avoir de balise &lt;li&gt; présente.</div>
+<div>Le 3ème test doit échouer :</div>
+<div class="code">
+  AssertionError: expected { Object (root, unrendered, ...) } to have a length of 3 but got 0
+</div>
+
+<div><span class="bold">Action 4 :</span>Mettre à jour le composant &lt;todoList:/&gt; pour qu'il affiche une balise &lt;li/&gt; pour chaque élément dans le tableau items. Cette liste de balises &lt;li/&gt; doit avoir l'index de la boucle comme clé et contenir la valeur de l'item.</div>
+
+<div>Une fois les balises ajoutés, il est possible que les tests échouent sur le second test :<div>
+
+<div class="code">TypeError: Cannot read property 'map' of undefined</div>
+
+<div><span class="bold">Action 5 :</span>Proposer une solution pour faire fonctionner ce second test.</div>
+
+<div>Tous les tests doivent passer après cela. Cependant, si vous retournez sur la page de l'application, et que vous testez le bouton ajouter, vous remarquerez que ça ne fonctionne pas.
+Les éléments ne sont pas affichés quand on veut en ajouter.
+</div>
+
+<h3>Test 12 : Affichage des éléments</h3>
+
+<div>
+Avant de corriger le problème, écrire un test qui va vérifier ce cas.
+On veut pouvoir tester que :</div>
+<ul>
+  <li>En faisant appel plusieurs fois à la fonction addItem</li>
+  <li>Le nombre de balises &lt;li&gt; dans ListContainer est également au nombre de fois que addItem à été appelé</li>
+</ul>
+
+<div><span class="bold">Question : </span> Un rendu Enzyme shallow suffira-t-il pour ce test ? Pourquoi ?</div>
+
+<div>Comme cela est attendu, le test doit échouer :</div>
+
+<div class="code">AssertionError: expected 0 to equal 2</div>
+
+<div><span class="bold">Action 1 :</span> à jour le composant todoListContainer pour qu'il passe state.todos au composant todoList</div>
+
+<div>Votre application doit maintenant être entièrement fonctionnelle</div>
+</div>
+ </body>
+</html>
